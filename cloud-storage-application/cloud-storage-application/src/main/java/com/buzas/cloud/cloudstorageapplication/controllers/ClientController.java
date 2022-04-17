@@ -96,9 +96,8 @@ public class ClientController implements Initializable {
         File userDirectory = new File("userFiles");
 
         String[] userFiles = userDirectory.list();
-        System.out.println(userFiles.length + "files affected during export attempt");
+        System.out.println(userFiles.length + " files affected during export attempt");
         for (String userFile : userFiles) {
-            Thread thread = new Thread(() -> {
                 File oldFile = new File(userDirectory, userFile);
                 if (oldFile.exists()) {
                     File newFile = new File(serverDirectory, userFile);
@@ -110,6 +109,7 @@ public class ClientController implements Initializable {
                             reader.transferTo(writer);
                             reader.close();
                             writer.close();
+                            serverView.getItems().addAll(userFile);
                         } catch (IOException e) {
                             System.err.println("Failed to copy data to cloud");
                             e.printStackTrace();
@@ -118,17 +118,6 @@ public class ClientController implements Initializable {
                         System.out.printf("File %s already exists \n", newFile.getName());
                     }
                 }
-            });
-            thread.start();
-
-//          Внизу аналогичная ситуация. Я пытался просто использовать readUserFilesNames() и аналог чуть ниже после
-//           прогона всех добавленных значений, но это по какой-то причине приводило к завизанию клиента(хотя
-//           процедуру оно выполняло)
-
-            File newFile = new File(serverDirectory, userFile);
-            if (!newFile.exists()){
-                serverView.getItems().addAll(userFile);
-            }
         }
     }
 
@@ -137,9 +126,8 @@ public class ClientController implements Initializable {
         File serverDirectory = new File("cloudFiles");
 
         String[] serverFiles = serverDirectory.list();
-        System.out.println(serverFiles.length + "files affected during import attempt");
+        System.out.println(serverFiles.length + " files affected during import attempt");
         for (String serverFile : serverFiles) {
-            Thread thread = new Thread(() -> {
                 File oldFile = new File(serverDirectory, serverFile);
                 if (oldFile.exists()) {
                     File newFile = new File(userDirectory, serverFile);
@@ -151,6 +139,7 @@ public class ClientController implements Initializable {
                             reader.transferTo(writer);
                             reader.close();
                             writer.close();
+                            userView.getItems().addAll(serverFile);
                         } catch (IOException e) {
                             System.err.println("Failed to copy data from cloud");
                             e.printStackTrace();
@@ -158,12 +147,7 @@ public class ClientController implements Initializable {
                     } else {
                         System.out.printf("File %s already exists \n", newFile.getName());
                     }
-                } });
-            thread.start();
-            File newFile = new File(userDirectory, serverFile);
-            if (!newFile.exists()){
-                userView.getItems().addAll(serverFile);
-            }
+                }
         }
     }
 

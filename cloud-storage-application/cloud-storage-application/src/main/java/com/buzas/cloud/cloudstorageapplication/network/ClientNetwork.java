@@ -37,4 +37,8 @@ public class ClientNetwork {
     public String readUTF() throws IOException {
         return input.readUTF();
     }
+
+    public Byte readBytes() throws IOException {
+        return input.readByte();
+    }
 }
