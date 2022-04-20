@@ -6,6 +6,8 @@ import java.nio.ByteBuffer;
 import java.nio.channels.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.InvalidPathException;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.util.Iterator;
 import java.util.Set;
@@ -63,15 +65,28 @@ public class NioTerminal {
         String message = readMessageFromChannel(readableChannel).trim();
         System.out.println("Received: " + message);
         if (message.equals("ls")){
-            readableChannel.write(
-                ByteBuffer.wrap(getLsResultString().getBytes(StandardCharsets.UTF_8))
-            );
+            try {
+                readableChannel.write(ByteBuffer.wrap(getLsResultString().getBytes(StandardCharsets.UTF_8)));
+            } catch (NoSuchFileException e){
+                readableChannel.write(ByteBuffer.wrap(
+                        "This path is invalid\n\r Return to base folder\n\r".getBytes(StandardCharsets.UTF_8))
+                );
+                directory = Path.of("cloudFiles");
+                System.err.println("Client tries to see void");
+                e.printStackTrace();
+            }
         } else if (message.startsWith("mkdir ")) {
             String makeDir = message.substring(6);
-            createNewDirectory(makeDir);
+            createNewDirectory(makeDir, readableChannel);
         } else if (message.startsWith("cd ")) {
             String newDir = message.substring(3);
-            directory = Path.of(newDir);
+            try {
+                directory = Path.of(newDir);
+            } catch (InvalidPathException e){
+                readableChannel.write(ByteBuffer.wrap("Path does not exists\n\r".getBytes(StandardCharsets.UTF_8)));
+                System.err.println("Path does not exists");
+                e.printStackTrace();
+            }
         } else if (message.startsWith("cat ")) {
             String listenFile = message.substring(4);
             readableChannel.write(
@@ -80,7 +95,7 @@ public class NioTerminal {
             readableChannel.write(ByteBuffer.wrap("\n\r".getBytes(StandardCharsets.UTF_8)));
         } else if (message.startsWith("touch ")) {
             String createFile = message.substring(6);
-            createNewFile(createFile);
+            createNewFile(createFile, readableChannel);
         } else {
             readableChannel.write(ByteBuffer.wrap("Unknown command \n\r".getBytes(StandardCharsets.UTF_8)));
         }
@@ -122,28 +137,44 @@ public class NioTerminal {
     }
 
     private String getLsResultString() throws IOException {
-        return Files.list(directory)
-                .map(p -> p.getFileName().toString())
-                .collect(Collectors.joining("\n\r")) + "\n\r";
+        if (Files.list(directory).count() == 0){
+            return "There is no files";
+        } else {
+            return Files.list(directory)
+                    .map(p -> p.getFileName().toString())
+                    .collect(Collectors.joining("\n\r")) + "\n\r";
+        }
     }
 
     private String readFileFilling(String listenedFile) throws IOException {
         Path listenedPath = Path.of(directory.toString(), listenedFile);
 
-        return Files.readString(listenedPath, StandardCharsets.UTF_8);
+        if (Files.exists(listenedPath)){
+            return Files.readString(listenedPath, StandardCharsets.UTF_8);
+        } else {
+            return "File not exists";
+        }
     }
 
-    private void createNewDirectory(String dirName) throws IOException {
+    private void createNewDirectory(String dirName, SocketChannel channel) throws IOException {
         Path newPath = Path.of(directory.toString(), dirName);
 
         if (!Files.exists(newPath)){
             Files.createDirectory(newPath);
+        } else {
+            channel.write(ByteBuffer.wrap("Directory already exists\n\r".getBytes(StandardCharsets.UTF_8)));
+            System.err.println("Client tries to create existing directory");
         }
     }
 
-    private void createNewFile(String createdFile) throws IOException {
+    private void createNewFile(String createdFile, SocketChannel channel) throws IOException {
         Path creationPath = Path.of(directory.toString(), createdFile);
-        Files.createFile(creationPath);
+        if (!Files.exists(creationPath)) {
+            Files.createFile(creationPath);
+        } else {
+            channel.write(ByteBuffer.wrap("File already exists\n\r".getBytes(StandardCharsets.UTF_8)));
+            System.err.println("Client tries to create existing file");
+        }
     }
 
     public static void main(String[] args) {
