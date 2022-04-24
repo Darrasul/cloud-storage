@@ -9,7 +9,7 @@ import io.netty.handler.codec.string.StringEncoder;
 public class EchoPipeLine extends ChannelInitializer<SocketChannel> {
 
     @Override
-    protected void initChannel(SocketChannel socketChannel) throws Exception {
+    protected void initChannel(SocketChannel socketChannel) {
         socketChannel.pipeline().addLast(
             new StringEncoder(),
                 new StringDecoder(),

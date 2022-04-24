@@ -1,6 +1,12 @@
 package com.buzas.cloud.application.network;
 
-// Решил проблему с package is declared in module which does not export it путем подключения core папки как рута сюда
+// Решил проблему с package' is declared in module which does not export it 'путем подключения core папки как рута сюда
+// Все остальные решения не особо помогли.
+// Проблема изначально в строении проекта: при определенных действиях(в нашем случае при добавлении зависимости двух модулей)
+// возникает проблема взаимодействия модулей с module-info.java и модулями без них. Простое добавление этих файлов с прописанием
+// не помогает. Это возникает из-за отсутствия нужных параметров в пользователи/.../.m2/settings.xml, которые нужно в таком случае
+// самостоятельно задать. Как правильно добавлять файлы в .m2/settings, увы, после Гугла осталось для меня загадкой, потому
+// выбранный мной костыль остался единственным способом.
 import com.buzas.cloud.model.AbstractMessage;
 import io.netty.handler.codec.serialization.ObjectDecoderInputStream;
 import io.netty.handler.codec.serialization.ObjectEncoderOutputStream;
@@ -34,10 +40,12 @@ public class ClientNetwork {
     }
 
     public AbstractMessage read() throws Exception {
+        System.out.println("reading message");
         return (AbstractMessage) input.readObject();
     }
 
     public void write(AbstractMessage message) throws IOException {
+        System.out.println("writing message");
         output.writeObject(message);
     }
 }

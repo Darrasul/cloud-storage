@@ -23,12 +23,6 @@ public class FileHandler extends SimpleChannelInboundHandler<AbstractMessage> {
     }
 
     @Override
-    public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-        ListMessage message = new ListMessage(serverDirectory);
-        ctx.writeAndFlush(message);
-    }
-
-    @Override
     protected void channelRead0(ChannelHandlerContext ctx, AbstractMessage message) throws Exception {
         log.info("received : {} message", message.getMessageType().getName());
         if (message instanceof FileMessage fileMessage){

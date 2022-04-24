@@ -26,7 +26,7 @@ public class NettyServer {
                     .closeFuture()
                     .sync();
         } catch (Exception e) {
-            System.err.println("troubles with bootstrap");
+            log.error("troubles with bootstrap");
             e.printStackTrace();
         } finally {
             light.shutdownGracefully();
