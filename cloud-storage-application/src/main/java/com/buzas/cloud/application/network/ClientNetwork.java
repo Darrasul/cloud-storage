@@ -40,12 +40,12 @@ public class ClientNetwork {
     }
 
     public AbstractMessage read() throws Exception {
-        System.out.println("reading message");
+        System.out.println("read messages");
         return (AbstractMessage) input.readObject();
     }
 
     public void write(AbstractMessage message) throws IOException {
-        System.out.println("writing message");
+        System.out.println("writing message: " + message);
         output.writeObject(message);
     }
 }

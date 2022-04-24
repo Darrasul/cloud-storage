@@ -27,6 +27,7 @@ public class FileHandler extends SimpleChannelInboundHandler<AbstractMessage> {
         log.info("received : {} message", message.getMessageType().getName());
         if (message instanceof FileMessage fileMessage){
             Files.write(serverDirectory.resolve(fileMessage.getName()), fileMessage.getBytes());
+            ctx.writeAndFlush(new ListMessage(serverDirectory));
         }
     }
 }

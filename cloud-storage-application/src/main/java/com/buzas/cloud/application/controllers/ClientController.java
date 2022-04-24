@@ -8,7 +8,6 @@ import javafx.event.ActionEvent;
 import javafx.fxml.Initializable;
 import javafx.scene.control.ListView;
 
-import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.nio.file.Files;
@@ -17,7 +16,6 @@ import java.util.List;
 import java.util.ResourceBundle;
 
 public class ClientController implements Initializable {
-
     private final Path serverDirectory = Path.of("cloudFiles");
     private Path clientDirectory;
     public ListView<String> leftNameplate;
@@ -82,30 +80,24 @@ public class ClientController implements Initializable {
         }
     }
 
-//    После добавления костыля для ClientNetwork без которого у меня запустить ничего не получалось после данного
-//    действия не обновлялся список файлов после добавления. Решил просто дописав прямое добавление файла в список
     public void fromUser(ActionEvent actionEvent) throws Exception {
         String fileName = userView.getSelectionModel().getSelectedItem();
         Path serverPath = serverDirectory.resolve(fileName);
         if (Files.exists(serverPath)){
-            System.err.println("Files at path: " + serverPath + " was deleted to write new version");
-            serverView.getItems().remove(fileName);
-            Files.delete(serverPath);
+            System.out.println("File at path: " + serverPath + " replaced with a newer version");
         }
         clientNetwork.write(new FileMessage(clientDirectory.resolve(fileName)));
-        serverView.getItems().addAll(fileName);
     }
 
     public void fromServer(ActionEvent actionEvent) throws Exception {
         String serverFile = serverView.getSelectionModel().getSelectedItem();
         Path serverPath = serverDirectory.resolve(serverFile);
-        Path userPath = clientDirectory.resolve(serverPath);
+        Path userPath = clientDirectory.resolve(serverFile);
         if (Files.exists(userPath)){
-            System.err.println("Files at path: " + userPath + " was deleted to write new version");
-            userView.getItems().remove(serverFile);
-            Files.delete(userPath);
+            System.out.println("File at path: " + userPath + " replaced with a stable version");
         }
         Files.write(userPath, Files.readAllBytes(serverPath));
-        userView.getItems().addAll(serverFile);
+        userView.getItems().clear();
+        userView.getItems().addAll(readUserFilesNames());
     }
 }
