@@ -91,12 +91,11 @@ public class ClientController implements Initializable {
 
     public void fromServer(ActionEvent actionEvent) throws Exception {
         String serverFile = serverView.getSelectionModel().getSelectedItem();
-        Path serverPath = serverDirectory.resolve(serverFile);
         Path userPath = clientDirectory.resolve(serverFile);
         if (Files.exists(userPath)){
             System.out.println("File at path: " + userPath + " replaced with a stable version");
         }
-        Files.write(userPath, Files.readAllBytes(serverPath));
+        Files.write(userPath, clientNetwork.download(new FileMessage(serverDirectory.resolve(serverFile))));
         userView.getItems().clear();
         userView.getItems().addAll(readUserFilesNames());
     }

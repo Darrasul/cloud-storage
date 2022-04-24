@@ -8,11 +8,13 @@ package com.buzas.cloud.application.network;
 // самостоятельно задать. Как правильно добавлять файлы в .m2/settings, увы, после Гугла осталось для меня загадкой, потому
 // выбранный мной костыль остался единственным способом.
 import com.buzas.cloud.model.AbstractMessage;
+import com.buzas.cloud.model.FileMessage;
 import io.netty.handler.codec.serialization.ObjectDecoderInputStream;
 import io.netty.handler.codec.serialization.ObjectEncoderOutputStream;
 
 import java.io.IOException;
 import java.net.Socket;
+import java.nio.file.Path;
 
 public class ClientNetwork {
 
@@ -47,5 +49,10 @@ public class ClientNetwork {
     public void write(AbstractMessage message) throws IOException {
         System.out.println("writing message: " + message);
         output.writeObject(message);
+    }
+
+    public byte[] download(FileMessage message) throws IOException {
+        System.out.println("receiving message: " + message);
+        return message.getBytes();
     }
 }
