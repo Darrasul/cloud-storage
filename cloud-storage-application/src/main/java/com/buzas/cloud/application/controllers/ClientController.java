@@ -1,7 +1,10 @@
 package com.buzas.cloud.application.controllers;
 
+import com.buzas.cloud.application.ClientApp;
+import com.buzas.cloud.application.dialogs.Dialogs;
 import com.buzas.cloud.application.network.ClientNetwork;
 import com.buzas.cloud.model.AbstractMessage;
+import com.buzas.cloud.model.DeleteMessage;
 import com.buzas.cloud.model.FileMessage;
 import com.buzas.cloud.model.ListMessage;
 import javafx.event.ActionEvent;
@@ -18,6 +21,7 @@ import java.util.ResourceBundle;
 public class ClientController implements Initializable {
     private final Path serverDirectory = Path.of("cloudFiles");
     private Path clientDirectory;
+    private ClientApp application;
     public ListView<String> leftNameplate;
     public ListView<String> rightNameplate;
     private ClientNetwork clientNetwork;
@@ -39,11 +43,16 @@ public class ClientController implements Initializable {
         }
     }
 
-    private List<String> readUserFilesNames() throws IOException {
+    private List<String> receiveUserFilesNames() throws IOException {
             return Files.list(clientDirectory)
                     .map(Path::getFileName)
                     .map(Path::toString)
                     .toList();
+    }
+
+    private void readUserFiles() throws IOException {
+        userView.getItems().clear();
+        userView.getItems().addAll(receiveUserFilesNames());
     }
 
     // Метод ниже в последствии может быть переработан. В текущем виде он просто подписывает где чьи файлы
@@ -65,8 +74,7 @@ public class ClientController implements Initializable {
             signUpNameplates();
             clientDirectory = Path.of("userFiles");
             clientNetwork = new ClientNetwork();
-            userView.getItems().clear();
-            userView.getItems().addAll(readUserFilesNames());
+            readUserFiles();
             Thread.sleep(300);
             Thread commandReadThread = new Thread(this::readCommands);
             commandReadThread.setDaemon(true);
@@ -96,7 +104,37 @@ public class ClientController implements Initializable {
             System.out.println("File at path: " + userPath + " replaced with a stable version");
         }
         Files.write(userPath, clientNetwork.download(new FileMessage(serverDirectory.resolve(serverFile))));
-        userView.getItems().clear();
-        userView.getItems().addAll(readUserFilesNames());
+        readUserFiles();
+    }
+
+    public void pressExitButton(ActionEvent actionEvent) throws IOException {
+        clientNetwork.closeNetwork();
+        application.INSTANCE.getPrimaryStage().close();
+    }
+
+    public void pressDeleteUserFile(ActionEvent actionEvent) throws IOException {
+        String userFile = userView.getSelectionModel().getSelectedItem();
+        Path userPath = clientDirectory.resolve(userFile);
+        if (Files.exists(userPath)){
+            System.out.println("File at path: " + userPath + " deleted");
+            Files.delete(userPath);
+            readUserFiles();
+        }
+    }
+
+    public void pressDeleteServerFile(ActionEvent actionEvent) throws IOException {
+        String serverFile = serverView.getSelectionModel().getSelectedItem();
+        Path serverPath = serverDirectory.resolve(serverFile);
+        clientNetwork.write(new DeleteMessage(serverPath));
+    }
+
+    public void pressAbout(ActionEvent actionEvent) {
+        System.out.println("User try to find something about us. Run");
+        Dialogs.AboutDialog.UPDATE.show();
+    }
+
+    public void pressRefreshButton(ActionEvent actionEvent) throws IOException {
+        readUserFiles();
+        clientNetwork.write(new ListMessage(serverDirectory));
     }
 }

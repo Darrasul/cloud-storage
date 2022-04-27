@@ -14,6 +14,7 @@ import io.netty.handler.codec.serialization.ObjectEncoderOutputStream;
 
 import java.io.IOException;
 import java.net.Socket;
+import java.nio.file.Files;
 import java.nio.file.Path;
 
 public class ClientNetwork {
@@ -39,6 +40,11 @@ public class ClientNetwork {
         socket = new Socket(host, port);
         output = new ObjectEncoderOutputStream(socket.getOutputStream());
         input = new ObjectDecoderInputStream(socket.getInputStream());
+    }
+
+    public void closeNetwork() throws IOException {
+        this.socket.close();
+        System.out.println("Client disconnected");
     }
 
     public AbstractMessage read() throws Exception {

@@ -1,12 +1,36 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.scene.control.*?>
-<?import javafx.scene.layout.AnchorPane?>
-<?import javafx.scene.layout.HBox?>
-<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.layout.*?>
+
 <AnchorPane prefHeight="477.0" prefWidth="702.0" xmlns="http://javafx.com/javafx/11.0.14-internal" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.buzas.cloud.application.controllers.ClientController">
    <children>
-      <HBox prefHeight="462.0" prefWidth="702.0">
+      <HBox layoutX="-3.0" prefHeight="19.0" prefWidth="702.0">
+         <children>
+            <MenuBar maxHeight="1.7976931348623157E308">
+              <menus>
+                <Menu mnemonicParsing="false" text="FileManager">
+                  <items>
+                    <MenuItem fx:id="exitButton" mnemonicParsing="false" onAction="#pressExitButton" text="Close Programm" />
+                  </items>
+                </Menu>
+                <Menu mnemonicParsing="false" text="Edit Files">
+                  <items>
+                        <MenuItem fx:id="deleteUserFile" mnemonicParsing="false" onAction="#pressDeleteUserFile" text="Delete User File" />
+                    <MenuItem fx:id="deleteServerFile" mnemonicParsing="false" onAction="#pressDeleteServerFile" text="Delete Server File" />
+                        <MenuItem fx:id="refreshButton" mnemonicParsing="false" onAction="#pressRefreshButton" text="Refresh File Lists" />
+                  </items>
+                </Menu>
+                <Menu mnemonicParsing="false" text="Help">
+                  <items>
+                    <MenuItem fx:id="aboutButton" mnemonicParsing="false" onAction="#pressAbout" text="About" />
+                  </items>
+                </Menu>
+              </menus>
+            </MenuBar>
+         </children>
+      </HBox>
+      <HBox layoutY="20.0" prefHeight="442.0" prefWidth="702.0">
          <children>
             <ListView fx:id="userView" prefHeight="478.0" prefWidth="300.0" />
             <VBox alignment="CENTER" prefHeight="478.0" prefWidth="102.0">

@@ -2,7 +2,8 @@ package com.buzas.cloud.model;
 
 public enum MessageType {
     FILE("file"),
-    LIST("list");
+    LIST("list"),
+    DELETE("delete");
 
     private final String name;
 
