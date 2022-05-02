@@ -35,8 +35,8 @@ public class FileHandler extends SimpleChannelInboundHandler<AbstractMessage> {
             Path downloadedFilePath = Path.of(serverDirectory.resolve(downloadMessage.getName()).toString());
             if (Files.exists(downloadedFilePath)) {
                 ctx.write(new DeliverMessage(downloadedFilePath));
-            } else {
-                ctx.write(new ErrorMessage());
+            } else if (!Files.exists(downloadedFilePath)){
+                ctx.write(new DownloadErrorMessage());
             }
         }
         ctx.flush();

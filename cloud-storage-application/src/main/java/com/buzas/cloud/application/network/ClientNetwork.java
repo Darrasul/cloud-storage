@@ -48,7 +48,6 @@ public class ClientNetwork {
     }
 
     public AbstractMessage read() throws Exception {
-        System.out.println("read messages");
         return (AbstractMessage) input.readObject();
     }
 

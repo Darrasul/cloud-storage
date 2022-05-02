@@ -29,23 +29,24 @@ public class ClientController implements Initializable {
         try {
             while (true){
                 AbstractMessage message = clientNetwork.read();
+                if (message instanceof DownloadErrorMessage){
+//                    Случай прерывания чтения
+                    System.out.println("ERROR WITH DOWNLOAD!");
+                    Dialogs.ErrorDialog.DOWNLOADING_FILES_ERROR.show();
+                }
                 if (message instanceof ListMessage listMessage){
+                    System.out.println("read messages");
                     serverView.getItems().clear();
                     serverView.getItems().addAll(listMessage.getFiles());
                 }
                 if (message instanceof DeliverMessage deliverMessage){
-                    try {
-                        Path deliveredFile = Path.of(deliverMessage.getName());
-                        byte[] deliveredBytes = deliverMessage.getBytes();
-                        Path requiredPath = clientDirectory.resolve(deliveredFile);
+                    System.out.println("deliver file");
+                    Path deliveredFile = Path.of(deliverMessage.getName());
+                    byte[] deliveredBytes = deliverMessage.getBytes();
+                    Path requiredPath = clientDirectory.resolve(deliveredFile);
 
-                        Files.write(requiredPath, deliveredBytes);
-                    } catch (Exception e){
-                        Dialogs.ErrorDialog.DOWNLOADING_FILES_ERROR.show();
-                        e.printStackTrace();
-                    } finally {
-                        readUserFiles();
-                    }
+                    Files.write(requiredPath, deliveredBytes);
+                    readUserFiles();
                 }
             }
         } catch (Exception e) {
