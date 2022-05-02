@@ -3,7 +3,10 @@ package com.buzas.cloud.model;
 public enum MessageType {
     FILE("file"),
     LIST("list"),
-    DELETE("delete");
+    DELETE("delete"),
+    DOWNLOAD("download"),
+    DELIVER("deliver"),
+    ERROR("error");
 
     private final String name;
 

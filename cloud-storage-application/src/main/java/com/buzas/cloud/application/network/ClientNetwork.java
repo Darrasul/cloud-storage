@@ -57,8 +57,8 @@ public class ClientNetwork {
         output.writeObject(message);
     }
 
-    public byte[] download(FileMessage message) throws IOException {
+    public void download(AbstractMessage message) throws IOException {
         System.out.println("receiving message: " + message);
-        return message.getBytes();
+        output.writeObject(message);
     }
 }

@@ -21,6 +21,21 @@ public class Dialogs {
         }
     }
 
+    public enum ErrorDialog {
+        DOWNLOADING_FILES_ERROR("Error with downloading files from server");
+
+        private static final String TITLE = "Error!";
+        private static final String TYPE = TITLE;
+        private final String message;
+
+        ErrorDialog (String message){
+            this.message = message;
+        }
+
+        public void show() {showDialog(Alert.AlertType.ERROR,TITLE, TYPE, message);}
+
+    }
+
     private static void showDialog(Alert.AlertType alertType,String title, String type, String message) {
         Alert alert = new Alert(alertType);
         alert.initOwner(ClientApp.INSTANCE.getPrimaryStage());

@@ -1,9 +1,6 @@
 package com.buzas.cloud.netty.handlers;
 
-import com.buzas.cloud.model.AbstractMessage;
-import com.buzas.cloud.model.DeleteMessage;
-import com.buzas.cloud.model.FileMessage;
-import com.buzas.cloud.model.ListMessage;
+import com.buzas.cloud.model.*;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import lombok.extern.slf4j.Slf4j;
@@ -33,6 +30,14 @@ public class FileHandler extends SimpleChannelInboundHandler<AbstractMessage> {
         if (message instanceof DeleteMessage deleteMessage){
             Files.delete(serverDirectory.resolve(deleteMessage.getName()));
             ctx.write(new ListMessage(serverDirectory));
+        }
+        if (message instanceof DownloadMessage downloadMessage){
+            Path downloadedFilePath = Path.of(serverDirectory.resolve(downloadMessage.getName()).toString());
+            if (Files.exists(downloadedFilePath)) {
+                ctx.write(new DeliverMessage(downloadedFilePath));
+            } else {
+                ctx.write(new ErrorMessage());
+            }
         }
         ctx.flush();
     }

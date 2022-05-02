@@ -3,10 +3,7 @@ package com.buzas.cloud.application.controllers;
 import com.buzas.cloud.application.ClientApp;
 import com.buzas.cloud.application.dialogs.Dialogs;
 import com.buzas.cloud.application.network.ClientNetwork;
-import com.buzas.cloud.model.AbstractMessage;
-import com.buzas.cloud.model.DeleteMessage;
-import com.buzas.cloud.model.FileMessage;
-import com.buzas.cloud.model.ListMessage;
+import com.buzas.cloud.model.*;
 import javafx.event.ActionEvent;
 import javafx.fxml.Initializable;
 import javafx.scene.control.ListView;
@@ -35,6 +32,20 @@ public class ClientController implements Initializable {
                 if (message instanceof ListMessage listMessage){
                     serverView.getItems().clear();
                     serverView.getItems().addAll(listMessage.getFiles());
+                }
+                if (message instanceof DeliverMessage deliverMessage){
+                    try {
+                        Path deliveredFile = Path.of(deliverMessage.getName());
+                        byte[] deliveredBytes = deliverMessage.getBytes();
+                        Path requiredPath = clientDirectory.resolve(deliveredFile);
+
+                        Files.write(requiredPath, deliveredBytes);
+                    } catch (Exception e){
+                        Dialogs.ErrorDialog.DOWNLOADING_FILES_ERROR.show();
+                        e.printStackTrace();
+                    } finally {
+                        readUserFiles();
+                    }
                 }
             }
         } catch (Exception e) {
@@ -90,21 +101,13 @@ public class ClientController implements Initializable {
 
     public void fromUser(ActionEvent actionEvent) throws Exception {
         String fileName = userView.getSelectionModel().getSelectedItem();
-        Path serverPath = serverDirectory.resolve(fileName);
-        if (Files.exists(serverPath)){
-            System.out.println("File at path: " + serverPath + " replaced with a newer version");
-        }
         clientNetwork.write(new FileMessage(clientDirectory.resolve(fileName)));
     }
 
     public void fromServer(ActionEvent actionEvent) throws Exception {
         String serverFile = serverView.getSelectionModel().getSelectedItem();
-        Path userPath = clientDirectory.resolve(serverFile);
-        if (Files.exists(userPath)){
-            System.out.println("File at path: " + userPath + " replaced with a stable version");
-        }
-        Files.write(userPath, clientNetwork.download(new FileMessage(serverDirectory.resolve(serverFile))));
-        readUserFiles();
+        Path serverFilePath = Path.of(serverFile);
+        clientNetwork.download(new DownloadMessage(serverDirectory.resolve(serverFilePath)));
     }
 
     public void pressExitButton(ActionEvent actionEvent) throws IOException {
