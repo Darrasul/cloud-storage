@@ -9,15 +9,31 @@ import javafx.stage.Stage;
 import java.io.IOException;
 public class ClientApp extends Application {
 
+    public static ClientApp INSTANCE;
+    private FXMLLoader primaryStageLoader;
+    private Stage primaryStage;
     @Override
-    public void start(Stage primaryStage){
-        try {
-            Parent parent = FXMLLoader.load(getClass().getResource("main.fxml"));
-            primaryStage.setScene(new Scene(parent));
-            primaryStage.show();
-        } catch (IOException e) {
-            System.err.println("Failed to load FXML");
-            e.printStackTrace();
-        }
+    public void start(Stage stage) throws IOException {
+        this.primaryStage = stage;
+
+        initializePrimaryStage();
+        getPrimaryStage().show();
+    }
+
+    @Override
+    public void init() {
+        INSTANCE = this;
+    }
+
+    private void initializePrimaryStage() throws IOException {
+        primaryStageLoader = new FXMLLoader();
+        primaryStageLoader.setLocation(getClass().getResource("main.fxml"));
+
+        Parent primaryWindow = primaryStageLoader.load();
+        this.primaryStage.setScene(new Scene(primaryWindow));
+    }
+
+    public Stage getPrimaryStage() {
+        return this.primaryStage;
     }
 }
