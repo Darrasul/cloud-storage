@@ -46,7 +46,11 @@ public class ClientController implements Initializable {
                     Path requiredPath = clientDirectory.resolve(deliveredFile);
 
                     Files.write(requiredPath, deliveredBytes);
-                    readUserFiles();
+                    try {
+                        readUserFiles();
+                    } catch (Exception e){
+                        e.printStackTrace();
+                    }
                 }
             }
         } catch (Exception e) {
