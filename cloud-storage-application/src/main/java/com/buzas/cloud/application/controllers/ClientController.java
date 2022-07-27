@@ -1,9 +1,9 @@
 package com.buzas.cloud.application.controllers;
 
+import com.buzas.cloud.application.ClientApp;
+import com.buzas.cloud.application.dialogs.Dialogs;
 import com.buzas.cloud.application.network.ClientNetwork;
-import com.buzas.cloud.model.AbstractMessage;
-import com.buzas.cloud.model.FileMessage;
-import com.buzas.cloud.model.ListMessage;
+import com.buzas.cloud.model.*;
 import javafx.event.ActionEvent;
 import javafx.fxml.Initializable;
 import javafx.scene.control.ListView;
@@ -18,6 +18,7 @@ import java.util.ResourceBundle;
 public class ClientController implements Initializable {
     private final Path serverDirectory = Path.of("cloudFiles");
     private Path clientDirectory;
+    private ClientApp application;
     public ListView<String> leftNameplate;
     public ListView<String> rightNameplate;
     private ClientNetwork clientNetwork;
@@ -28,9 +29,28 @@ public class ClientController implements Initializable {
         try {
             while (true){
                 AbstractMessage message = clientNetwork.read();
+                if (message instanceof DownloadErrorMessage){
+//                    Случай прерывания чтения
+                    System.out.println("ERROR WITH DOWNLOAD!");
+                    Dialogs.ErrorDialog.DOWNLOADING_FILES_ERROR.show();
+                }
                 if (message instanceof ListMessage listMessage){
+                    System.out.println("read messages");
                     serverView.getItems().clear();
                     serverView.getItems().addAll(listMessage.getFiles());
+                }
+                if (message instanceof DeliverMessage deliverMessage){
+                    System.out.println("deliver file");
+                    Path deliveredFile = Path.of(deliverMessage.getName());
+                    byte[] deliveredBytes = deliverMessage.getBytes();
+                    Path requiredPath = clientDirectory.resolve(deliveredFile);
+
+                    Files.write(requiredPath, deliveredBytes);
+                    try {
+                        readUserFiles();
+                    } catch (Exception e){
+                        e.printStackTrace();
+                    }
                 }
             }
         } catch (Exception e) {
@@ -39,11 +59,16 @@ public class ClientController implements Initializable {
         }
     }
 
-    private List<String> readUserFilesNames() throws IOException {
+    private List<String> receiveUserFilesNames() throws IOException {
             return Files.list(clientDirectory)
                     .map(Path::getFileName)
                     .map(Path::toString)
                     .toList();
+    }
+
+    private void readUserFiles() throws IOException {
+        userView.getItems().clear();
+        userView.getItems().addAll(receiveUserFilesNames());
     }
 
     // Метод ниже в последствии может быть переработан. В текущем виде он просто подписывает где чьи файлы
@@ -65,8 +90,7 @@ public class ClientController implements Initializable {
             signUpNameplates();
             clientDirectory = Path.of("userFiles");
             clientNetwork = new ClientNetwork();
-            userView.getItems().clear();
-            userView.getItems().addAll(readUserFilesNames());
+            readUserFiles();
             Thread.sleep(300);
             Thread commandReadThread = new Thread(this::readCommands);
             commandReadThread.setDaemon(true);
@@ -82,21 +106,43 @@ public class ClientController implements Initializable {
 
     public void fromUser(ActionEvent actionEvent) throws Exception {
         String fileName = userView.getSelectionModel().getSelectedItem();
-        Path serverPath = serverDirectory.resolve(fileName);
-        if (Files.exists(serverPath)){
-            System.out.println("File at path: " + serverPath + " replaced with a newer version");
-        }
         clientNetwork.write(new FileMessage(clientDirectory.resolve(fileName)));
     }
 
     public void fromServer(ActionEvent actionEvent) throws Exception {
         String serverFile = serverView.getSelectionModel().getSelectedItem();
-        Path userPath = clientDirectory.resolve(serverFile);
+        Path serverFilePath = Path.of(serverFile);
+        clientNetwork.download(new DownloadMessage(serverDirectory.resolve(serverFilePath)));
+    }
+
+    public void pressExitButton(ActionEvent actionEvent) throws IOException {
+        clientNetwork.closeNetwork();
+        application.INSTANCE.getPrimaryStage().close();
+    }
+
+    public void pressDeleteUserFile(ActionEvent actionEvent) throws IOException {
+        String userFile = userView.getSelectionModel().getSelectedItem();
+        Path userPath = clientDirectory.resolve(userFile);
         if (Files.exists(userPath)){
-            System.out.println("File at path: " + userPath + " replaced with a stable version");
+            System.out.println("File at path: " + userPath + " deleted");
+            Files.delete(userPath);
+            readUserFiles();
         }
-        Files.write(userPath, clientNetwork.download(new FileMessage(serverDirectory.resolve(serverFile))));
-        userView.getItems().clear();
-        userView.getItems().addAll(readUserFilesNames());
+    }
+
+    public void pressDeleteServerFile(ActionEvent actionEvent) throws IOException {
+        String serverFile = serverView.getSelectionModel().getSelectedItem();
+        Path serverPath = serverDirectory.resolve(serverFile);
+        clientNetwork.write(new DeleteMessage(serverPath));
+    }
+
+    public void pressAbout(ActionEvent actionEvent) {
+        System.out.println("User try to find something about us. Run");
+        Dialogs.AboutDialog.UPDATE.show();
+    }
+
+    public void pressRefreshButton(ActionEvent actionEvent) throws IOException {
+        readUserFiles();
+        clientNetwork.write(new ListMessage(serverDirectory));
     }
 }
